@@ -29,22 +29,19 @@ namespace Chat
                 Environment.Exit(-1);
             }
 
+            ChatReceiver receiver = new ChatReceiver();
             ConcurrentQueue<string> receivedMsgs = new ConcurrentQueue<string>();
-            ChatReceiver receiver = new ChatReceiver(receivedMsgs);
-            Task.Run(() => receiver.StartReceiving(portNumber));
+            _ = receiver.ReceiveAsync(portNumber, receivedMsgs);
 
             ChatSender sender = new ChatSender();
             ConcurrentQueue<string> toSendMsgs = new ConcurrentQueue<string>();
-            Task.Run(() => EnqueueToSend(toSendMsgs));
-        
+            Task.Run(() => EnqueueToSend(toSendMsgs)); // start new thread as Console.ReadLine blocks
+
             while (true)
             {
-                if (receivedMsgs.Count > 0)
+                while (receivedMsgs.TryDequeue(out string receivedMsg))
                 {
-                    while (receivedMsgs.TryDequeue(out string receivedMsg))
-                    {
-                        Console.WriteLine($"Received: {receivedMsg}");
-                    }
+                    Console.WriteLine($"Received: {receivedMsg}");
                 }
 
                 if (toSendMsgs.TryDequeue(out string toSendMsg))
@@ -56,7 +53,7 @@ namespace Chat
                     }
                     else if (parsed[0].ToUpper() == "SEND" && parsed.Length == 4)
                     {
-                        sender.Send(parsed[1], parsed[2], parsed[3]);
+                        _ = sender.SendAsync(parsed[1], parsed[2], parsed[3]);
                     }
                     else
                     {

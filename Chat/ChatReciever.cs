@@ -3,19 +3,13 @@ using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Chat
 {
     public class ChatReceiver
     {
-        private ConcurrentQueue<string> receivedMsgs;
-
-        public ChatReceiver(ConcurrentQueue<string> receivedMsgs)
-        {
-            this.receivedMsgs = receivedMsgs;
-        }
-
-        public void StartReceiving(int port)
+        public async Task ReceiveAsync(int port, ConcurrentQueue<string> receivedMsgs)
         {
             IPHostEntry ipHostEntry = Dns.GetHostEntry(Dns.GetHostName());
             IPAddress ipAddress = ipHostEntry.AddressList[0];
@@ -32,7 +26,7 @@ namespace Chat
                 while (true)
                 {
                     // Program is suspended while waiting for an incoming connection.  
-                    Socket handler = receiver.Accept();
+                    Socket handler = await receiver.AcceptAsync();
 
                     string msg = null;
 

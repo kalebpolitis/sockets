@@ -2,12 +2,13 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Chat
 {
     public class ChatSender
     {
-        public void Send(string ipString, string port, string message)
+        public async Task SendAsync(string ipString, string port, string message)
         {
             if (!int.TryParse(port, out int portNumber) ||
                 !IPAddress.TryParse(ipString, out var address))
@@ -19,9 +20,9 @@ namespace Chat
             var sender = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             try
             {
-                sender.Connect(endpoint);
+                await sender.ConnectAsync(endpoint);
                 byte[] messageBytes = Encoding.ASCII.GetBytes(message + "<EOF>");
-                var bytesSent = sender.Send(messageBytes);
+                var bytesSent = await sender.SendAsync(messageBytes, SocketFlags.None);
             }
             catch(Exception e)
             {
